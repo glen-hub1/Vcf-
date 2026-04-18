@@ -1,0 +1,271 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIP Contact Exchange</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"><style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+color:white;
+}
+
+.container{
+background:white;
+color:black;
+padding:30px;
+border-radius:20px;
+width:420px;
+text-align:center;
+box-shadow:0 20px 60px rgba(0,0,0,0.3);
+animation:fadeIn 1s ease;
+}
+
+@keyframes fadeIn{
+from{opacity:0;transform:translateY(20px)}
+to{opacity:1;transform:translateY(0)}
+}
+
+h2{
+margin-bottom:5px;
+}
+
+.counter{
+background:#f4f4f4;
+padding:15px;
+border-radius:12px;
+margin:15px 0;
+}
+
+input{
+width:100%;
+padding:12px;
+border-radius:10px;
+border:1px solid #ccc;
+margin-top:10px;
+}
+
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:30px;
+background:#2c5364;
+color:white;
+margin-top:10px;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+transform:scale(1.02);
+}
+
+.group{
+display:none;
+margin-top:15px;
+animation:fadeIn .8s ease;
+}
+
+.admin{
+margin-top:15px;
+background:black;
+}
+
+.dashboard{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:white;
+color:black;
+padding:20px;
+overflow:auto;
+}
+
+.card{
+background:#f3f3f3;
+padding:12px;
+border-radius:10px;
+margin-top:10px;
+display:flex;
+justify-content:space-between;
+}
+
+.delete{
+background:red;
+color:white;
+border:none;
+padding:5px 10px;
+border-radius:5px;
+cursor:pointer;
+}
+
+</style></head>
+<body><div class="container"><h2>VIP Contact Exchange</h2>
+<p>Upload Your Contact — Limited 700 Members</p><div class="counter">
+Registered: <strong id="registered">0</strong><br>
+Remaining: <strong id="remaining">700</strong>
+</div><input type="text" id="name" placeholder="Your Name">
+<input type="tel" id="phone" placeholder="Phone Number"><button onclick="register()">Upload Contact</button>
+
+<div class="group" id="groupBox">
+<p>Registration Successful</p>
+<a id="groupLink" target="_blank">Join WhatsApp Group</a>
+</div><button class="admin" onclick="adminLogin()">
+Admin Dashboard
+</button></div><div class="dashboard" id="dashboard"><h2>Admin Dashboard</h2><button onclick="closeAdmin()">Close</button>
+
+<div class="counter">
+Total Contacts: <strong id="adminCount">0</strong>
+</div><button onclick="downloadVCF()">
+Download VCF (Admin Only)
+</button><button onclick="resetAll()">
+Reset When 700 Reached
+</button><div id="contacts"></div></div><script>
+
+const MAX = 700;
+const PASSWORD = "admin123";
+
+let contacts = JSON.parse(localStorage.getItem("vipContacts")) || [];
+
+function update(){
+
+let count = contacts.length;
+
+document.getElementById("registered").innerText = count;
+document.getElementById("remaining").innerText = MAX - count;
+document.getElementById("adminCount").innerText = count;
+
+render();
+
+}
+
+function register(){
+
+let name = document.getElementById("name").value;
+let phone = document.getElementById("phone").value;
+
+if(!name || !phone){
+alert("Fill all fields");
+return;
+}
+
+if(contacts.length >= MAX){
+alert("Registration Full");
+return;
+}
+
+contacts.push({name,phone});
+
+localStorage.setItem("vipContacts",JSON.stringify(contacts));
+
+update();
+
+
+document.getElementById("groupBox").style.display="block";
+
+}
+
+function render(){
+
+let html="";
+
+contacts.forEach((c,i)=>{
+
+html+=`
+<div class="card">
+${c.name} - ${c.phone}
+<button class="delete" onclick="remove(${i})">Delete</button>
+</div>
+`;
+
+});
+
+document.getElementById("contacts").innerHTML=html;
+
+}
+
+function remove(i){
+
+contacts.splice(i,1);
+
+localStorage.setItem("vipContacts",JSON.stringify(contacts));
+
+update();
+
+}
+
+function adminLogin(){
+
+let pass = prompt("Enter Admin Password");
+
+if(pass===PASSWORD){
+document.getElementById("dashboard").style.display="block";
+}
+
+}
+
+function closeAdmin(){
+
+document.getElementById("dashboard").style.display="none";
+
+}
+
+function downloadVCF(){
+
+let vcf="";
+
+contacts.forEach(c=>{
+
+vcf+=`BEGIN:VCARD
+VERSION:3.0
+FN:${c.name}
+TEL:${c.phone}
+END:VCARD
+`;
+
+});
+
+let blob = new Blob([vcf],{type:'text/vcard'});
+
+let a = document.createElement("a");
+
+a.href = URL.createObjectURL(blob);
+
+a.download = "VIP-Contacts.vcf";
+
+a.click();
+
+}
+
+function resetAll(){
+
+if(confirm("Reset All Contacts?")){
+localStorage.removeItem("vipContacts");
+contacts=[];
+update();
+}
+
+}
+
+// GROUP LINK HERE
+
+document.getElementById("groupLink").href="https://chat.whatsapp.com/YOURGROUPLINK";
+
+update();
+
+</script></body>
+</html>
